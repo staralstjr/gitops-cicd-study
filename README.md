@@ -109,5 +109,6 @@ PR 머지 (main)
 | [concept-02-gitops-argocd.md](docs/concept-02-gitops-argocd.md) | GitOps · Argo CD · 동기화 루프 · selfHeal · Application 리소스 |
 | [concept-03-dockerfile-anatomy.md](docs/concept-03-dockerfile-anatomy.md) | Dockerfile 해부 · 레이어 캐싱 · 멀티스테이지 · 경량 이미지 |
 | [concept-04-deploy-topology-and-environments.md](docs/concept-04-deploy-topology-and-environments.md) | 앱/인프라 레포 분리 · 환경 · 빌드≠배포 · 브랜치의 의미 · 이름으로 환경 넘겨짚지 않기 |
+| [concept-05-kubernetes-resources.md](docs/concept-05-kubernetes-resources.md) | Pod · Deployment · Service · ConfigMap · Secret/SealedSecret · AWS 대응표 |
 
-*(이후 GitHub Actions 워크플로, Kubernetes 리소스 문서 추가 예정)*
+*(이후 GitHub Actions 워크플로 상세, Kustomize 문서 추가 예정)*
