@@ -1,7 +1,8 @@
-# GitOps 기반 CI/CD 파이프라인 구축 — 학습 및 설계 기록
+# 컨테이너 배포 파이프라인 학습 기록 (Docker · Kubernetes · GitOps)
 
-컨테이너 기반 웹 서비스(Next.js 프론트엔드 + FastAPI 백엔드)의 배포를
-**수동 → 자동(GitOps)** 으로 전환하는 과정에서 정리한 개념·설계 문서.
+컨테이너 기반 웹 서비스(Next.js 프론트엔드 + FastAPI 백엔드)의 **배포 파이프라인을
+이해하고 직접 수행**하면서 정리한 개념·실습 기록. 나아가 이 흐름을 자동화(CI/CD)한다면
+어떻게 설계할 수 있는지까지 **학습 차원에서** 탐구한다.
 
 > ⚠️ **기록 원칙**
 > 이 저장소는 **개념과 파이프라인 로직만** 기록한다.
@@ -10,37 +11,25 @@
 
 ---
 
-## 🎯 목표
+## 🎯 범위
 
-**"PR을 머지하면 프로덕션까지 자동 배포되는 파이프라인"** 을 만든다.
-
-### 현재 (수동)
+**① 현재 운영 중인 수동 배포 흐름을 이해하고 직접 수행한다.** (실제 업무)
 
 ```
 개발 완료
-  → 개발자가 로컬에서 docker build
+  → docker build (linux/amd64)
   → :latest 태그로 레지스트리에 push
-  → Argo CD UI에서 수동으로 서비스 restart
-  → 눈으로 배포 확인
+  → Argo CD에서 서비스 restart → 새 Pod가 최신 이미지 pull
+  → 배포 확인
 ```
 
-**문제점**
+이 팀은 **의도적으로 수동 배포**를 사용한다(배포 통제·단순성). "자동화하지 않는 것"도 합리적 선택이다.
 
-1. 빌드/푸시가 개발자 로컬 환경에 의존 (사람마다 환경 차이, 실수 여지)
-2. `:latest` 태그는 **덮어쓰기 가능**하므로 매니페스트 내용이 변하지 않음
-   → Argo CD가 변경을 감지하지 못함 → **수동 restart가 필요한 근본 원인**
-3. 현재 운영 중인 버전이 **어느 커밋인지 추적 불가**, 롤백도 어려움
+**② 이 흐름을 자동화한다면 어떻게 설계할 수 있는지 학습한다.** (개인 학습/포트폴리오, 실제 적용 X)
 
-### 목표 (자동)
-
-```
-PR 머지 (main)
-  → CI(GitHub Actions)가 이미지 빌드
-  → 커밋 SHA 태그로 레지스트리에 push        ← 불변 태그
-  → 인프라 저장소의 매니페스트 이미지 태그 갱신
-  → Argo CD가 Git 변경을 감지해 자동 동기화
-  → 롤링 업데이트로 신규 버전 반영
-```
+- `:latest`는 덮어쓰기 가능 → 매니페스트가 안 변함 → Argo CD가 감지 못 함 → 수동 restart의 근본 원인
+- 커밋 SHA 불변 태그 + 매니페스트 자동 갱신으로 자동 배포가 가능해지는 원리
+- → 상세: [concept-07](docs/concept-07-github-actions-ci-design.md)
 
 ---
 
@@ -75,16 +64,16 @@ PR 머지 (main)
 
 ---
 
-## 🚦 진행 계획
+## 🚦 진행 상황
 
-| 단계 | 내용 | 프로덕션 영향 | 상태 |
-|------|------|----------------|------|
-| **개념 학습** | 컨테이너·이미지·레지스트리·K8s·GitOps | 없음 | 진행 중 |
-| **Phase 1 — CI** | 머지 시 이미지 자동 빌드 + 레지스트리 push | **없음** (배포는 기존 수동 유지) | 예정 |
-| **Phase 2 — CD** | 매니페스트 태그 자동 갱신 → Argo CD 자동 동기화 | 있음 (신중히, 승인 후) | 예정 |
+| 단계 | 내용 | 상태 |
+|------|------|------|
+| **개념 학습** | 컨테이너·이미지·레지스트리·Dockerfile·K8s·GitOps·Kustomize | ✅ (concept 01~06) |
+| **수동 배포 수행** | 백엔드 build → push → Argo CD restart 직접 경험 | ✅ (백엔드) / 프론트 예정 |
+| **자동화 설계 탐구** | CI/CD로 자동화한다면? (학습용, 실제 적용 X) | ✅ 문서화 (concept 07) |
 
-> 위험도가 낮은 **CI부터** 붙인다. Phase 1은 이미지를 창고에 쌓기만 하므로
-> 기존 배포 흐름을 전혀 건드리지 않는다.
+> 팀은 **수동 배포를 의도적으로 사용**한다. 실제 업무는 수동 배포를 능숙히 수행하는 것이고,
+> 자동화(Phase 1/2)는 **"이렇게 자동화할 수 있다"는 학습·설계 기록**으로만 남긴다.
 
 ---
 
@@ -111,5 +100,4 @@ PR 머지 (main)
 | [concept-04-deploy-topology-and-environments.md](docs/concept-04-deploy-topology-and-environments.md) | 앱/인프라 레포 분리 · 환경 · 빌드≠배포 · 브랜치의 의미 · 이름으로 환경 넘겨짚지 않기 |
 | [concept-05-kubernetes-resources.md](docs/concept-05-kubernetes-resources.md) | Pod · Deployment · Service · ConfigMap · Secret/SealedSecret · AWS 대응표 |
 | [concept-06-kustomize.md](docs/concept-06-kustomize.md) | Kustomize · base+overlay · 이미지 태그 치환(Phase 2 핵심) · Argo CD 연결 |
-
-*(이후 GitHub Actions 워크플로 상세 문서 추가 예정)*
+| [concept-07-github-actions-ci-design.md](docs/concept-07-github-actions-ci-design.md) | GitHub Actions CI 자동화 **설계 탐구**(학습용) · SHA 태그 · Phase 1/2 · 자동화 판단 |
