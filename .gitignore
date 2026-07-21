@@ -1,0 +1,13 @@
+# OS / 에디터
+.DS_Store
+.idea/
+.vscode/
+
+# 혹시라도 실수로 만들어질 수 있는 민감 파일 (안전장치)
+*.env
+.env*
+secret*.yaml
+*-secret.yaml
+kubeconfig*
+*.key
+*.pem
